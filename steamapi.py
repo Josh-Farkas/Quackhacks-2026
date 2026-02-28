@@ -76,8 +76,10 @@ def get_game_and_time(api_key: str, steam_id: str):
 
 
 def write_game_data_to_file(data_pair, file_path=GAME_DATA_PATH):
-    with open(file_path, 'a') as f:
-        f.write(f'{data_pair[0]}, {data_pair[1]}\n')
+    with open(file_path, 'a+') as f:
+        # if not f.read():
+        #     f.write("Timestamp,Name\n")
+        f.write(f'{data_pair[0]},{data_pair[1]}\n')
 
 def main():
     steam_id = STEAM_ID

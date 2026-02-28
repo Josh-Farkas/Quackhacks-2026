@@ -1,8 +1,8 @@
 from garminconnect import Garmin
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 from datetime import date
+
 
 # Initialize and login
 client = Garmin(
@@ -11,22 +11,18 @@ client = Garmin(
 )
 client.login()
 
-# Get today's stats
 _today = date.today().strftime('%Y-%m-%d')
-stats = client.get_stats(_today)
-# print("Stats for today", stats["bodyBatteryDynamicFeedbackEvent"])
 
-# test = client.get_user_summary(_today)
-# print(test)
 
-test = client.get_stress_data(_today)
+def get_stress_values(day=_today):
+    # Get today's stats
+    stats = client.get_stats(day)
+    # print("Stats for today", stats["bodyBatteryDynamicFeedbackEvent"])
 
-stress_values = np.array(test.get('stressValuesArray'))
-times = (stress_values[:, 0] - stress_values[0, 0]) / (1000 * 60)
-stress = stress_values[:, 1]
-masked_stress = np.ma.masked_where(stress <= 0, stress)
-plt.plot(times, masked_stress)
-plt.show()
+    stress_data = client.get_stress_data(day)
+    stress_values = np.array(stress_data.get('stressValuesArray'))
+
+    return stress_values
 
 
 # Get heart rate data
