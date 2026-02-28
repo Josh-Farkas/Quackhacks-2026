@@ -87,11 +87,32 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
     plt.show()
 
 
+def plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map):
+    """Plots the average stress of each game in a bar chart"""
+    avg_stress = get_game_average_stress(stress_times, stress_values, game_times, game_names)
+
+    games  = list(avg_stress.keys())
+    values = list(avg_stress.values())
+    colors = [color_map.get(game, "gray") for game in games]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(games, values, color=colors)
+    ax.bar_label(bars, fmt="%.1f", padding=3)
+
+    ax.set_xlabel("Game")
+    ax.set_ylabel("Average Stress")
+    ax.set_title("Average Stress by Game")
+    ax.set_ylim(0, max(values) * 1.15)  # headroom for labels
+    plt.xticks(rotation=15, ha="right")
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     stress_times, stress_values = get_stress_values()
     game_times, game_names, color_map = read_game_data()
     # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
-    print(get_game_average_stress(stress_times, stress_values, game_times, game_names))
+    # plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
 
 
 if __name__ == "__main__":
