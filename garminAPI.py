@@ -2,7 +2,10 @@ from garminconnect import Garmin
 import os
 import numpy as np
 from datetime import date
+from dotenv import load_dotenv
 
+dirname = os.path.dirname(__file__)
+load_dotenv(dotenv_path=os.path.join(dirname, '.env'))
 
 # Initialize and login
 client = Garmin(
