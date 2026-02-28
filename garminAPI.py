@@ -2,6 +2,7 @@ from garminconnect import Garmin
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import date
 
 # Initialize and login
 client = Garmin(
@@ -11,7 +12,6 @@ client = Garmin(
 client.login()
 
 # Get today's stats
-from datetime import date
 _today = date.today().strftime('%Y-%m-%d')
 stats = client.get_stats(_today)
 # print("Stats for today", stats["bodyBatteryDynamicFeedbackEvent"])
