@@ -6,7 +6,19 @@ import matplotlib.dates as mdates
 import numpy as np
 from datetime import datetime
 
+
+def date_to_time(date):
+    """Changes datetime date into UNIX timestamp"""
+    return int(date.timestamp())
+
+
+def time_to_date(time):
+    """Changes UNIX timestamp to datetime date"""
+    return datetime.fromtimestamp(time)
+
+
 def read_game_data():
+    """Returns array of times games were opened, the game's name, and its graph color"""
     game_data = np.genfromtxt(steamapi.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
     game_data = np.array(game_data.tolist())
     game_times = game_data[:, 0].astype(float)
@@ -28,6 +40,7 @@ def get_game_at(game_times, game_names, t):
 
 
 def get_stress_values():
+    """Returns array of timestamps and corresponding stress values"""
     stress_data = garminAPI.get_stress_values()
     stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
@@ -36,14 +49,13 @@ def get_stress_values():
     return stress_times, stress_values
 
 
-
 def plot_game_stress():
     """Plots stress with colors based on current game."""
     # Get latest data
     stress_times, stress_values = get_stress_values()
     game_times, game_names, color_map = read_game_data()
     
-    stress_dates = [datetime.fromtimestamp(t) for t in stress_times]
+    stress_dates = [time_to_date(t) for t in stress_times]
 
     
     fig, ax = plt.subplots(figsize=(12, 4))
@@ -53,7 +65,7 @@ def plot_game_stress():
         color = color_map.get(game, "gray")
         ax.plot(stress_dates[i:i+2], stress_values[i:i+2], color=color, linewidth=2)
 
-    #  Legend
+    # Legend
     for game, color in color_map.items():
         ax.plot([], [], color=color, label=game, linewidth=2)
     
@@ -70,7 +82,8 @@ def plot_game_stress():
 
 
 def main():
-    plot_game_stress()
+    # plot_game_stress()
+    print(garminAPI.get_stats())
 
 if __name__ == "__main__":
     main()

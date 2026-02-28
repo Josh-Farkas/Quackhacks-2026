@@ -6,22 +6,21 @@ from datetime import date
 
 # Initialize and login
 client = Garmin(
-    os.getenv("GARMIN_EMAIL", "lizkirstein@icloud.com"),
-    os.getenv("GARMIN_PASSWORD", "Succulentsarecool49!")
+    os.getenv("GARMIN_EMAIL"),
+    os.getenv("GARMIN_PASSWORD")
 )
 client.login()
 
 _today = date.today().strftime('%Y-%m-%d')
 
 
-def get_stress_values(day=_today):
-    # Get today's stats
-    stats = client.get_stats(day)
-    # print("Stats for today", stats["bodyBatteryDynamicFeedbackEvent"])
+def get_stats(day=_today):
+    """Return client stats for a given day."""
+    return client.get_stats(day)
 
+def get_stress_values(day=_today):
     stress_data = client.get_stress_data(day)
     stress_values = np.array(stress_data.get('stressValuesArray'))
-
     return stress_values
 
 
