@@ -1,11 +1,11 @@
 import os
-from steam_web_api import Steam
 from dotenv import load_dotenv
 import time
 import requests
 import sys
 
 STEAM_API_BASE = "https://api.steampowered.com"
+UPDATE_PERIOD = 60 * 3 # Seconds
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 STEAM_ID   = "76561198357985560"          # 64-bit SteamID,  e.g. "76561197960287930"
@@ -85,10 +85,10 @@ def main():
         print(f"Resolving vanity URL '{VANITY_URL}'...")
         steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
 
-    for n in range(5):
+    while True:
         data = get_game_and_time(STEAM_API_KEY, steam_id)
         write_game_data_to_file(data, GAME_DATA_PATH)
-        time.sleep(10)
+        time.sleep(UPDATE_PERIOD)
 
 
 if __name__ == "__main__":
