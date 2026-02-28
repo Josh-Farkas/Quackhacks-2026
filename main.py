@@ -2,16 +2,9 @@ import steamapi
 import garminAPI
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.dates as mdates
 import numpy as np
-import csv
-
-game_times = None
-game_names = None
-
-stress_times = None
-stress_values = None
-
-color_map = {}
+from datetime import datetime
 
 def read_game_data():
     game_data = np.genfromtxt(steamapi.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
@@ -22,9 +15,11 @@ def read_game_data():
     unique_games = list(dict.fromkeys(game_names))
     palette = list(mcolors.TABLEAU_COLORS.values())
     color_map = {game: palette[i % len(palette)] for i, game in enumerate(unique_games)}
+    color_map["None"] = "gray"
+    return game_times, game_names, color_map
 
 
-def get_game_at(t):
+def get_game_at(game_times, game_names, t):
     """Return the game being played at time t."""
     prior = game_times[game_times <= t]
     if len(prior) == 0:
@@ -34,30 +29,43 @@ def get_game_at(t):
 
 def get_stress_values():
     stress_data = garminAPI.get_stress_values()
-    stress_times = (stress_data[:, 0] - stress_data[0, 0]) / (1000 * 60)
+    stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
     stress_values = np.ma.masked_where(stress_values <= 0, stress_values)
+    print(stress_times.min(), stress_times.max()) # 1772254800.0 1772303760.0
+    return stress_times, stress_values
 
 
 
 def plot_game_stress():
     """Plots stress with colors based on current game."""
     # Get latest data
-    get_stress_values()
-    read_game_data()
+    stress_times, stress_values = get_stress_values()
+    game_times, game_names, color_map = read_game_data()
+    
+    stress_dates = [datetime.fromtimestamp(t) for t in stress_times]
+
     
     fig, ax = plt.subplots(figsize=(12, 4))
 
     for i in range(len(stress_times) - 1):
-        game  = get_game_at(stress_times[i])
+        game  = get_game_at(game_times, game_names, stress_times[i])
         color = color_map.get(game, "gray")
-        ax.plot(stress_times[i:i+2], stress_values[i:i+2], color=color, linewidth=2)
+        ax.plot(stress_dates[i:i+2], stress_values[i:i+2], color=color, linewidth=2)
 
     #  Legend
     for game, color in color_map.items():
         ax.plot([], [], color=color, label=game, linewidth=2)
     
-    plt.plot(stress_times, stress_values)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%D %H:%M"))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    fig.autofmt_xdate()  # tilts labels so they don't overlap
+    
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Stress")
+    ax.set_title("Stress Over Time by Game")
+    ax.legend()
+    plt.tight_layout()
     plt.show()
 
 
