@@ -4,7 +4,13 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date, timedelta
+
+_today = date.today().strftime('%Y-%m-%d')
+
+def get_ymd_date(date: date):
+    """Returns the date in YYYY/MM/DD format days_ago days from today."""
+    return date.strftime('%Y-%m-%d')
 
 
 def date_to_time(date):
@@ -15,7 +21,6 @@ def date_to_time(date):
 def time_to_date(time):
     """Changes UNIX timestamp to datetime date"""
     return datetime.fromtimestamp(time)
-
 
 def read_game_data():
     """Returns array of times games were opened, the game's name, and its graph color"""
@@ -39,13 +44,16 @@ def get_game_at(game_times, game_names, t):
     return game_names[np.argmax(prior)]
 
 
-def get_stress_values():
+def get_stress_values(start_date, end_date):
     """Returns array of timestamps and corresponding stress values"""
-    stress_data = garminAPI.get_stress_values()
+    
+    stress_data = np.vstack([
+        garminAPI.get_stress_values(get_ymd_date(start_date + timedelta(days=d)))
+        for d in range((end_date - start_date).days + 1)
+    ])
     stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
     stress_values = np.ma.masked_where(stress_values <= 0, stress_values)
-    print(stress_times.min(), stress_times.max()) # 1772254800.0 1772303760.0
     return stress_times, stress_values
 
 
@@ -58,6 +66,23 @@ def get_game_average_stress(stress_times, stress_values, game_times, game_names)
         game: np.ma.mean(stress_values[labels == game])
         for game in np.unique(labels)
     }
+
+
+def get_sleep_data(start_date, end_date):
+    """Returns the sleep data starting at start date until end date"""
+    sleep_data = {
+        start_date + timedelta(days=d): garminAPI.get_sleep_data(get_ymd_date(start_date + timedelta(days=d)))
+        for d in range((end_date - start_date).days + 1)
+    }
+    return sleep_data
+
+
+def get_sleep_scores(start_date, end_date):
+    """Returns a list of sleep scores from start_date to end_date"""
+    sleep_data = get_sleep_data(start_date, end_date)
+    sleep_scores = [sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data]
+    return sleep_scores
+
 
 
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
@@ -109,8 +134,11 @@ def plot_game_average_stress(stress_times, stress_values, game_times, game_names
 
 
 def main():
-    steamAPI.start_steam_polling()
-    stress_times, stress_values = get_stress_values()
+    # steamAPI.start_steam_polling()
+    # sleep_data = garminAPI.get_sleep_data()
+    print(get_sleep_scores(date.today() - timedelta(days=7), date.today()))
+    
+    stress_times, stress_values = get_stress_values(date.today() - timedelta(days=7), date.today())
     game_times, game_names, color_map = read_game_data()
     # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     # plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)

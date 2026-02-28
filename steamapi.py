@@ -103,6 +103,7 @@ def start_steam_polling():
 #     if not steam_id:
 #         print(f"Resolving vanity URL '{VANITY_URL}'...")
 #         steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
+#     start_steam_polling()
 
 
 
