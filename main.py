@@ -35,7 +35,7 @@ def get_game_at(game_times, game_names, t):
     """Return the game being played at time t."""
     prior = game_times[game_times <= t]
     if len(prior) == 0:
-        return "Unknown"
+        return "None"
     return game_names[np.argmax(prior)]
 
 
@@ -49,15 +49,21 @@ def get_stress_values():
     return stress_times, stress_values
 
 
-def plot_game_stress():
+def get_game_average_stress(stress_times, stress_values, game_times, game_names):
+    """Returns the average stress level while playing each game"""
+    # Map each stress timestamp to a game name
+    labels = np.array([get_game_at(game_times, game_names, t) for t in stress_times])
+
+    return {
+        game: np.ma.mean(stress_values[labels == game])
+        for game in np.unique(labels)
+    }
+
+
+def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
-    # Get latest data
-    stress_times, stress_values = get_stress_values()
-    game_times, game_names, color_map = read_game_data()
-    
     stress_dates = [time_to_date(t) for t in stress_times]
 
-    
     fig, ax = plt.subplots(figsize=(12, 4))
 
     for i in range(len(stress_times) - 1):
@@ -82,8 +88,11 @@ def plot_game_stress():
 
 
 def main():
-    # plot_game_stress()
-    print(garminAPI.get_stats())
+    stress_times, stress_values = get_stress_values()
+    game_times, game_names, color_map = read_game_data()
+    # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
+    print(get_game_average_stress(stress_times, stress_values, game_times, game_names))
+
 
 if __name__ == "__main__":
     main()
