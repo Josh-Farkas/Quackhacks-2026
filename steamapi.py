@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import time
 import requests
 import sys
+import threading
 
 STEAM_API_BASE = "https://api.steampowered.com"
 UPDATE_PERIOD = 60 * 3 # Seconds
@@ -77,20 +78,33 @@ def get_game_and_time(api_key: str, steam_id: str):
 
 def write_game_data_to_file(data_pair, file_path=GAME_DATA_PATH):
     with open(file_path, 'a+') as f:
-        # if not f.read():
-        #     f.write("Timestamp,Name\n")
         f.write(f'{data_pair[0]},{data_pair[1]}\n')
 
-def main():
-    steam_id = STEAM_ID
-    if not steam_id:
-        print(f"Resolving vanity URL '{VANITY_URL}'...")
-        steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
 
+def update():
+    data = get_game_and_time(STEAM_API_KEY, STEAM_ID)
+    write_game_data_to_file(data, GAME_DATA_PATH)
+
+
+def steam_polling_loop():
+    """Threaded loop to update Steam data"""
     while True:
-        data = get_game_and_time(STEAM_API_KEY, steam_id)
-        write_game_data_to_file(data, GAME_DATA_PATH)
+        update()  # or whatever your update function is
         time.sleep(UPDATE_PERIOD)
+
+
+def start_steam_polling():
+    t = threading.Thread(target=steam_polling_loop, daemon=True)
+    t.start()
+
+
+# def main():
+#     steam_id = STEAM_ID
+#     if not steam_id:
+#         print(f"Resolving vanity URL '{VANITY_URL}'...")
+#         steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
+
+
 
 
 if __name__ == "__main__":

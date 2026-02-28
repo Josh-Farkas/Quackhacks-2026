@@ -1,4 +1,4 @@
-import steamapi
+import steamAPI
 import garminAPI
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -19,7 +19,7 @@ def time_to_date(time):
 
 def read_game_data():
     """Returns array of times games were opened, the game's name, and its graph color"""
-    game_data = np.genfromtxt(steamapi.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
+    game_data = np.genfromtxt(steamAPI.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
     game_data = np.array(game_data.tolist())
     game_times = game_data[:, 0].astype(float)
     game_names = game_data[:, 1]
@@ -109,6 +109,7 @@ def plot_game_average_stress(stress_times, stress_values, game_times, game_names
 
 
 def main():
+    steamAPI.start_steam_polling()
     stress_times, stress_values = get_stress_values()
     game_times, game_names, color_map = read_game_data()
     # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
