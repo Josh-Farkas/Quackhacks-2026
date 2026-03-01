@@ -187,18 +187,7 @@ def plot_game_average_stress(stress_times, stress_values, game_times, game_names
 
 
 def get_daily_playtime(game_times, game_names):
-    daily_playtime = {}  # {date: {game: minutes}}
-    for t, game in zip(game_times, game_names):
-        day = time_to_date(t)
-        if day not in daily_playtime:
-            daily_playtime[day] = {}
-        if game not in daily_playtime[day]:
-            daily_playtime[day][game] = 0
-        daily_playtime[day][game] += 3
-
-
-def get_sleep_correlation(game_times, game_names, sleep_scores):
-    """Calculates how a game effects your sleep"""
+    """Returns a dictionary of {date: {game: minutes}}"""
     daily_playtime = {}
     for t, game in zip(game_times, game_names):
         day = time_to_date(t)
@@ -206,7 +195,13 @@ def get_sleep_correlation(game_times, game_names, sleep_scores):
             daily_playtime[day] = {}
         if game not in daily_playtime[day]:
             daily_playtime[day][game] = 0
-        daily_playtime[day][game] += steamAPI.UPDATE_PERIOD
+        daily_playtime[day][game] += 3
+    return daily_playtime
+
+
+def get_sleep_correlation(game_times, game_names, sleep_scores):
+    """Calculates how a game effects your sleep"""
+    daily_playtime = get_daily_playtime(game_times, game_names)
 
 def main():
     # stats = garminAPI.get_stats()
