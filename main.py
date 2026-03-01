@@ -6,6 +6,7 @@ import matplotlib.dates as mdates
 import numpy as np
 from datetime import datetime, date, timedelta
 import json # dump dict into txt file
+import report
 
 _today = date.today().strftime('%Y-%m-%d')
 
@@ -21,7 +22,7 @@ def date_to_time(date):
 
 def time_to_date(time):
     """Changes UNIX timestamp to datetime date"""
-    return datetime.fromtimestamp(time)
+    return datetime.fromtimestamp(time).date()
 
 def read_game_data():
     """Returns array of times games were opened, the game's name, and its graph color"""
@@ -82,7 +83,7 @@ def get_sleep_data(start_date, end_date):
 def get_sleep_scores(start_date, end_date):
     """Returns a list of sleep scores from start_date to end_date"""
     sleep_data = get_sleep_data(start_date, end_date)
-    sleep_scores = [sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data]
+    sleep_scores = {d: sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data}
     return sleep_scores
 
 
@@ -90,7 +91,7 @@ def get_sleep_scores(start_date, end_date):
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
     # Get latest data
-    stress_times, stress_values = get_stress_values()
+    stress_times, stress_values = get_stress_values(date.today(), date.today())
     game_times, game_names, color_map = read_game_data()
 
     stress_dates = [time_to_date(t) for t in stress_times]
@@ -115,7 +116,8 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
     ax.set_title("Stress Over Time by Game")
     ax.legend()
     plt.tight_layout()
-    plt.show()
+    return fig
+    # plt.show()
 
 def get_body_battery_values():
     """Returns array of timestamps and corresponding body battery values"""
@@ -128,12 +130,9 @@ def get_body_battery_values():
     # print(body_battery_times.min(), body_battery_times.max())
     return body_battery_times, body_battery_values
 
-def plot_body_battery():
+def plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map):
     """Plots body battery values with colors based on current game."""
     # Get latest data
-    body_battery_times, body_battery_values = get_body_battery_values()
-    game_times, game_names, color_map = read_game_data()
-
     body_battery_dates = [time_to_date(t) for t in body_battery_times]
 
     fig, ax = plt.subplots(figsize=(12, 4))
@@ -161,7 +160,8 @@ def plot_body_battery():
     ax.set_title("Body Battery Over Time by Game")
     ax.legend()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    return fig
 
 
 def plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map):
@@ -182,13 +182,33 @@ def plot_game_average_stress(stress_times, stress_values, game_times, game_names
     ax.set_ylim(0, max(values) * 1.15)  # headroom for labels
     plt.xticks(rotation=15, ha="right")
     plt.tight_layout()
-    plt.show()
+    return fig
+    # plt.show()
 
+
+def get_daily_playtime(game_times, game_names):
+    daily_playtime = {}  # {date: {game: minutes}}
+    for t, game in zip(game_times, game_names):
+        day = time_to_date(t)
+        if day not in daily_playtime:
+            daily_playtime[day] = {}
+        if game not in daily_playtime[day]:
+            daily_playtime[day][game] = 0
+        daily_playtime[day][game] += 3
+
+
+def get_sleep_correlation(game_times, game_names, sleep_scores):
+    """Calculates how a game effects your sleep"""
+    daily_playtime = {}
+    for t, game in zip(game_times, game_names):
+        day = time_to_date(t)
+        if day not in daily_playtime:
+            daily_playtime[day] = {}
+        if game not in daily_playtime[day]:
+            daily_playtime[day][game] = 0
+        daily_playtime[day][game] += steamAPI.UPDATE_PERIOD
 
 def main():
-    # plot_game_stress()
-
-    plot_body_battery()
     # stats = garminAPI.get_stats()
 
     # # View Stats Dict in a .txt File
@@ -202,16 +222,20 @@ def main():
     # # View Body Battery Values np array in a .txt File
     # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_values(), fmt="%i", delimiter=",")
 
-    # print(stats)
-    # steamAPI.start_steam_polling()
+    steamAPI.start_steam_polling()
     # sleep_data = garminAPI.get_sleep_data()
-    print(get_sleep_scores(date.today() - timedelta(days=7), date.today()))
+    sleep_scores = get_sleep_scores(date.today() - timedelta(days=7), date.today())
     
     stress_times, stress_values = get_stress_values(date.today() - timedelta(days=7), date.today())
     game_times, game_names, color_map = read_game_data()
-    # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
-    # plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
+    body_battery_times, body_battery_values = get_body_battery_values()
 
+    stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
+    avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
+    body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
+
+    report.generate_report(stress_over_time, avg_stress_per_game)
+    print("Done")
 
 if __name__ == "__main__":
     main()
