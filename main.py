@@ -388,7 +388,8 @@ def generate_report():
     # print(sleep_correlation)
     # print(get_daily_playtime(game_times, game_names))
 
-    report.generate_report(stress_over_time, avg_stress_per_game)
+    report.generate_report(
+        stress_over_time, avg_stress_per_game, body_battery_over_time)
 
 
 

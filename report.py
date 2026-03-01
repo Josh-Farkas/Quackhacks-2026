@@ -17,7 +17,7 @@ def fig_to_image(fig, width=6*inch):
     return Image(buf, width=width, height=width * aspect)
 
 
-def generate_report(stress_over_time, avg_stress_per_game, output_path="report.pdf"):
+def generate_report(stress_over_time, avg_stress_per_game, body_battery_over_time, output_path="report.pdf",):
     styles = getSampleStyleSheet()
     doc = SimpleDocTemplate(output_path, pagesize=letter)
     content = []
@@ -36,11 +36,15 @@ def generate_report(stress_over_time, avg_stress_per_game, output_path="report.p
     content.append(Spacer(1, 0.3 * inch))
 
     # Adds Stress Over Time Report
-    add_fig_report(stress_over_time, "Stress Over Time", "The chart below shows your stress level throughout the session. Each color represents a different game being played at that moment.")
+    add_fig_report(stress_over_time, "Stress Over Time", "The chart below shows your stress level throughout the time period. Each color indicates when different games were played.")
     content.append(PageBreak())
 
     # Adds Average Stress Per Game Report
     add_fig_report(avg_stress_per_game, "Average Stress by Game", "The bar chart below shows the mean stress level recorded during each game. Higher values indicate more stressful sessions.")
+    content.append(PageBreak())
+
+    # Adds Body Battery by Game Over Time Report
+    add_fig_report(body_battery_over_time, "Body Battery by Game Over Time", "The chart below shows your body battery levels throughout the time period. Each color indicates when different games were played.")
 
     doc.build(content)
     print(f"Report saved to {output_path}")
