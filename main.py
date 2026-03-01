@@ -210,9 +210,25 @@ def plot_body_battery(body_battery_times, body_battery_values, game_times, game_
 
     fig, ax = plt.subplots(figsize=(12, 4))
 
+    # for i in range(len(body_battery_times) - 1):
+    #     game = get_game_at(game_times, game_names, body_battery_times[i])
+    #     color = color_map.get(game, "gray")
+    #     ax.plot(
+    #         body_battery_dates[i : i + 2],
+    #         body_battery_values[i : i + 2],
+    #         color=color,
+    #         linewidth=2,
+    #     )
+
     for i in range(len(body_battery_times) - 1):
         game = get_game_at(game_times, game_names, body_battery_times[i])
-        color = color_map.get(game, "gray")
+
+        # Make None grey
+        if game == "None":
+            color = "gray"
+        else:
+            color = color_map.get(game, "gray")
+
         ax.plot(
             body_battery_dates[i : i + 2],
             body_battery_values[i : i + 2],
@@ -220,9 +236,79 @@ def plot_body_battery(body_battery_times, body_battery_values, game_times, game_
             linewidth=2,
         )
 
+    # build continuous session blocks for shading
+    sessions = []
+    current_game = None
+    session_start = None
+
+    for i, t in enumerate(body_battery_times):
+        game = get_game_at(game_times, game_names, t)
+
+        if current_game is None:
+            current_game = game
+            session_start = t
+            continue
+
+        if game != current_game:
+            # close previous session at the CURRENT timestamp t
+            sessions.append({
+                "game": current_game,
+                "start": session_start,
+                "end": t
+            })
+            # start new session
+            current_game = game
+            session_start = t
+
+    # close last session to final time
+    if current_game is not None and session_start is not None:
+        sessions.append(
+            {
+                "game": current_game,
+                "start": session_start,
+                "end": body_battery_times[-1],
+            }
+        )
+
+    # shading
+    for s in sessions:
+        if s["game"] == "None":
+            continue
+
+        ax.axvspan(
+            time_to_date(s["start"]),
+            time_to_date(s["end"]),
+            color=color_map.get(s["game"], "gray"),
+            alpha=0.15,
+            zorder=0  # keep shading behind the line
+        )
+
     # Legend
+    handles = []
+
+    # Put "None" first if it exists
+    if "None" in color_map:
+        handles.append(
+            Line2D([0], [0],
+                color="gray",
+                lw=4,
+                label="None")
+        )
+
+    # Then add all other games
     for game, color in color_map.items():
-        ax.plot([], [], color=color, label=game, linewidth=2)
+        if game == "None":
+            continue
+        handles.append(
+            Line2D([0], [0],
+                color=color,
+                lw=4,
+                label=game)
+        )
+
+    # # Legend
+    # for game, color in color_map.items():
+    #     ax.plot([], [], color=color, label=game, linewidth=2)
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%D %H:%M"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
@@ -231,7 +317,7 @@ def plot_body_battery(body_battery_times, body_battery_values, game_times, game_
     ax.set_xlabel("Time")
     ax.set_ylabel("Body Battery")
     ax.set_title("Body Battery Over Time by Game")
-    ax.legend()
+    ax.legend(handles=handles)
     plt.tight_layout()
     # plt.show()
     return fig
@@ -387,7 +473,6 @@ def generate_report():
 
     report.generate_report(
         stress_over_time, avg_stress_per_game, body_battery_over_time)
-
 
 
 def main():
