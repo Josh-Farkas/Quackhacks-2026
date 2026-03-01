@@ -84,9 +84,8 @@ def get_sleep_data(start_date, end_date):
 def get_sleep_scores(start_date, end_date):
     """Returns a list of sleep scores from start_date to end_date"""
     sleep_data = get_sleep_data(start_date, end_date)
-    sleep_scores = {d: sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data}
+    sleep_scores = {d: (sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] if 'sleepScores' in sleep_data[d]['dailySleepDTO'] else None) for d in sleep_data}
     return sleep_scores
-
 
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
@@ -198,15 +197,14 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
     return fig
     # plt.show()
 
-def get_body_battery_values():
+def get_body_battery_values(start_date, end_date):
     """Returns array of timestamps and corresponding body battery values"""
-    body_battery_data = garminAPI.get_body_battery_values()
+    body_battery_data = garminAPI.get_body_battery_data(get_ymd_date(start_date), get_ymd_date(end_date))
     body_battery_times = body_battery_data[:, 0] / 1000
     body_battery_values = body_battery_data[:, 1]
     body_battery_values = np.ma.masked_where(
         body_battery_values < 0, body_battery_values
     )
-    # print(body_battery_times.min(), body_battery_times.max())
     return body_battery_times, body_battery_values
 
 def plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map):
@@ -302,6 +300,8 @@ def get_sleep_correlation(game_times, game_names, sleep_scores):
     }
 
 def main():
+    
+    # print(get_sleep_data(date.today() - timedelta(days=1), date.today() - timedelta(days=1)))
     # stats = garminAPI.get_stats()
 
     # # View Stats Dict in a .txt File
@@ -313,23 +313,25 @@ def main():
     #     json.dump(get_body_battery_values(), file, indent=4)
 
     # # View Body Battery Values np array in a .txt File
-    # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_values(), fmt="%i", delimiter=",")
+    # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_data(), fmt="%i", delimiter=",")
 
     steamAPI.start_steam_polling()
     # sleep_data = garminAPI.get_sleep_data()
     sleep_scores = get_sleep_scores(date.today() - timedelta(days=7), date.today())
     
-    stress_times, stress_values = get_stress_values(date.today() - timedelta(days=7), date.today())
+    stress_times, stress_values = get_stress_values(date(2026, 2, 11) - timedelta(days=7), date(2026, 2, 11))
     game_times, game_names, color_map = read_game_data()
-    body_battery_times, body_battery_values = get_body_battery_values()
+    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(days=7), date.today())
 
     stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
     body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
     sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
-    print(sleep_correlation)
-    print(get_daily_playtime(game_times, game_names))
+    
+    # print(sleep_correlation)
+    # print(get_daily_playtime(game_times, game_names))
 
+    print("RUNNING")
     report.generate_report(stress_over_time, avg_stress_per_game)
 
 if __name__ == "__main__":

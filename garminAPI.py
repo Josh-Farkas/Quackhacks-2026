@@ -34,14 +34,10 @@ def get_stress_values(day=_today):
     stress_values = np.array(stress_data.get('stressValuesArray'))
     return stress_values
 
-def get_body_battery_values(start_day=_today, end_day=_today):
+def get_body_battery_data(start_day=_today, end_day=_today):
     body_battery_list = client.get_body_battery(start_day, end_day)
-    body_battery_values = np.array(body_battery_list[0].get("bodyBatteryValuesArray"), dtype=np.int64)
-    for i in body_battery_list[1:]:
-        body_battery_values = np.concatenate(
-            (body_battery_values, i.get("bodyBatteryValuesArray")), dtype=np.int64
-        )
-    return body_battery_values
+    body_battery_data = np.vstack(list(map(lambda b: b.get('bodyBatteryValuesArray'), body_battery_list)))
+    return body_battery_data
 
 
 # Get heart rate data
