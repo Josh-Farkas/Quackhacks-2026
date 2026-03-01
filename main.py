@@ -5,6 +5,7 @@ import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import numpy as np
 from datetime import datetime, date, timedelta
+import json # dump dict into txt file
 
 _today = date.today().strftime('%Y-%m-%d')
 
@@ -54,6 +55,7 @@ def get_stress_values(start_date, end_date):
     stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
     stress_values = np.ma.masked_where(stress_values <= 0, stress_values)
+    # print(stress_times.min(), stress_times.max()) # 1772254800.0 1772303760.0
     return stress_times, stress_values
 
 
@@ -87,6 +89,10 @@ def get_sleep_scores(start_date, end_date):
 
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
+    # Get latest data
+    stress_times, stress_values = get_stress_values()
+    game_times, game_names, color_map = read_game_data()
+
     stress_dates = [time_to_date(t) for t in stress_times]
 
     fig, ax = plt.subplots(figsize=(12, 4))
@@ -99,14 +105,60 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
     # Legend
     for game, color in color_map.items():
         ax.plot([], [], color=color, label=game, linewidth=2)
-    
+
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%D %H:%M"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
     fig.autofmt_xdate()  # tilts labels so they don't overlap
-    
+
     ax.set_xlabel("Time")
     ax.set_ylabel("Stress")
     ax.set_title("Stress Over Time by Game")
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+def get_body_battery_values():
+    """Returns array of timestamps and corresponding body battery values"""
+    body_battery_data = garminAPI.get_body_battery_values()
+    body_battery_times = body_battery_data[:, 0] / 1000
+    body_battery_values = body_battery_data[:, 1]
+    body_battery_values = np.ma.masked_where(
+        body_battery_values < 0, body_battery_values
+    )
+    # print(body_battery_times.min(), body_battery_times.max())
+    return body_battery_times, body_battery_values
+
+def plot_body_battery():
+    """Plots body battery values with colors based on current game."""
+    # Get latest data
+    body_battery_times, body_battery_values = get_body_battery_values()
+    game_times, game_names, color_map = read_game_data()
+
+    body_battery_dates = [time_to_date(t) for t in body_battery_times]
+
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    for i in range(len(body_battery_times) - 1):
+        game = get_game_at(game_times, game_names, body_battery_times[i])
+        color = color_map.get(game, "gray")
+        ax.plot(
+            body_battery_dates[i : i + 2],
+            body_battery_values[i : i + 2],
+            color=color,
+            linewidth=2,
+        )
+
+    # Legend
+    for game, color in color_map.items():
+        ax.plot([], [], color=color, label=game, linewidth=2)
+
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%D %H:%M"))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    fig.autofmt_xdate()  # tilts labels so they don't overlap
+
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Body Battery")
+    ax.set_title("Body Battery Over Time by Game")
     ax.legend()
     plt.tight_layout()
     plt.show()
@@ -134,6 +186,23 @@ def plot_game_average_stress(stress_times, stress_values, game_times, game_names
 
 
 def main():
+    # plot_game_stress()
+
+    plot_body_battery()
+    # stats = garminAPI.get_stats()
+
+    # # View Stats Dict in a .txt File
+    # with open('stats.txt', 'w') as file:
+    #     json.dump(stats, file, indent=4)
+
+    # # View Body Battery Values Dict in a .txt File
+    # with open('bodyBattery.txt', 'w') as file:
+    #     json.dump(get_body_battery_values(), file, indent=4)
+
+    # # View Body Battery Values np array in a .txt File
+    # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_values(), fmt="%i", delimiter=",")
+
+    # print(stats)
     # steamAPI.start_steam_polling()
     # sleep_data = garminAPI.get_sleep_data()
     print(get_sleep_scores(date.today() - timedelta(days=7), date.today()))
