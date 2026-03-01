@@ -12,5 +12,5 @@ with open('user_game_data.csv', 'a+') as f:
         else:
             game = 'None'
         f.write(f'{t},{game}\n')
-    f.write(f'{1772280000 + 180},{'None'}\n')
+    f.write(f'{1772280000 + 180},{"None"}\n')
     

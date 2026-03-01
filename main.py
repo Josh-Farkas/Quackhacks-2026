@@ -3,6 +3,7 @@ import garminAPI
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
+from matplotlib.lines import Line2D
 import numpy as np
 from datetime import datetime, date, timedelta
 import json # dump dict into txt file
@@ -114,52 +115,76 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
         ax.plot(stress_dates[i:i+2], stress_values[i:i+2],
                 color=color, linewidth=2)
 
-    # --- Build sessions ---
+    # build continuous session blocks for shading
     sessions = []
     current_game = None
     session_start = None
 
-    for i in range(len(stress_times)):
-        game = get_game_at(game_times, game_names, stress_times[i])
+    for i, t in enumerate(stress_times):
+        game = get_game_at(game_times, game_names, t)
+
+        if current_game is None:
+            current_game = game
+            session_start = t
+            continue
 
         if game != current_game:
-            if current_game is not None:
-                sessions.append({
-                    "game": current_game,
-                    "start": stress_times[i-1],
-                    "end": stress_times[i]
-                })
+            # close previous session at the CURRENT timestamp t
+            sessions.append({
+                "game": current_game,
+                "start": session_start,
+                "end": t
+            })
+            # start new session
             current_game = game
-            session_start = stress_times[i]
+            session_start = t
 
-    # Close last session
-    if current_game is not None:
+    # close last session to final time
+    if current_game is not None and session_start is not None:
         sessions.append({
             "game": current_game,
             "start": session_start,
             "end": stress_times[-1]
         })
 
-    # Convert to datetime
-    for session in sessions:
-        session["start_dt"] = time_to_date(session["start"])
-        session["end_dt"] = time_to_date(session["end"])
-
-    # --- Shade ONLY real games ---
-    for session in sessions:
-        if session["game"] == "None":
+    # shading
+    for s in sessions:
+        if s["game"] == "None":
             continue
 
         ax.axvspan(
-            session["start_dt"],
-            session["end_dt"],
-            color=color_map.get(session["game"], "gray"),
-            alpha=0.15
+            time_to_date(s["start"]),
+            time_to_date(s["end"]),
+            color=color_map.get(s["game"], "gray"),
+            alpha=0.15,
+            zorder=0  # keep shading behind the line
         )
 
     # Legend
+    handles = []
+
+    # Put "None" first if it exists
+    if "None" in color_map:
+        handles.append(
+            Line2D([0], [0],
+                color="gray",
+                lw=4,
+                label="None")
+        )
+
+    # Then add all other games
     for game, color in color_map.items():
-        ax.plot([], [], color=color, label=game, linewidth=2)
+        if game == "None":
+            continue
+        handles.append(
+            Line2D([0], [0],
+                color=color,
+                lw=4,
+                label=game)
+        )
+
+    # for game, color in color_map.items():
+    #     ax.plot([], [], color=color, label=game, linewidth=2)
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%D %H:%M"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
@@ -168,7 +193,7 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
     ax.set_xlabel("Time")
     ax.set_ylabel("Stress")
     ax.set_title("Stress Over Time by Game")
-    ax.legend()
+    ax.legend(handles=handles)
     plt.tight_layout()
     return fig
     # plt.show()
