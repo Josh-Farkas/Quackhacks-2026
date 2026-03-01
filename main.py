@@ -88,9 +88,6 @@ def get_sleep_scores(start_date, end_date):
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
     # Get latest data
-    stress_times, stress_values = get_stress_values(date.today(), date.today())
-    game_times, game_names, color_map = read_game_data()
-
     stress_dates = [time_to_date(t) for t in stress_times]
 
     fig, ax = plt.subplots(figsize=(12, 4))
@@ -375,9 +372,9 @@ def generate_report():
     sleep_data = garminAPI.get_sleep_data()
     sleep_scores = get_sleep_scores(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
     
-    stress_times, stress_values = get_stress_values(date.today() - timedelta(2), date.today() - timedelta(2))
+    stress_times, stress_values = get_stress_values(date.today() - timedelta(1), date.today() - timedelta(1))
     game_times, game_names, color_map = read_game_data()
-    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(2), date.today() - timedelta(2))
+    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(1), date.today() - timedelta(1))
 
     stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
