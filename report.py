@@ -30,34 +30,17 @@ def generate_report(stress_over_time, avg_stress_per_game, output_path="report.p
         plt.close(fig)
 
     # Adds Title
-    content.append(
-        Paragraph(
-            "Recent Impacts of Gaming on Your Sleep and Mental Health", styles["Title"]
-        )
-    )
+    content.append(Paragraph("Recent Impacts of Gaming on Your Sleep and Mental Health", styles["Title"]))
     content.append(Spacer(1, 0.2 * inch))
-    content.append(
-        Paragraph(
-            "This report visualizes correlations between your gaming sessions and their respective impacts on your body, like on your stress over time broken down by game, average stress by game, and on your sleep scores.",
-            styles["Normal"],
-        )
-    )
+    content.append(Paragraph("This report visualizes correlations between your gaming sessions and their respective impacts on your body, like on your stress over time broken down by game, average stress by game, and on your sleep scores.", styles["Normal"]))
     content.append(Spacer(1, 0.3 * inch))
 
     # Adds Stress Over Time Report
-    add_fig_report(
-        stress_over_time,
-        "Stress Over Time",
-        "The chart below shows your stress level throughout the session. Each color represents a different game being played at that moment.",
-    )
+    add_fig_report(stress_over_time, "Stress Over Time", "The chart below shows your stress level throughout the session. Each color represents a different game being played at that moment.")
     content.append(PageBreak())
 
     # Adds Average Stress Per Game Report
-    add_fig_report(
-        avg_stress_per_game,
-        "Average Stress by Game",
-        "The bar chart below shows the mean stress level recorded during each game. Higher values indicate more stressful sessions.",
-    )
+    add_fig_report(avg_stress_per_game, "Average Stress by Game", "The bar chart below shows the mean stress level recorded during each game. Higher values indicate more stressful sessions.")
 
     doc.build(content)
     print(f"Report saved to {output_path}")
