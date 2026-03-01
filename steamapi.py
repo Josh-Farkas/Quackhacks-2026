@@ -55,8 +55,8 @@ def get_active_game(api_key: str, steam_id: str) -> None:
     game_id = player.get("gameid")
     game_name = player.get("gameextrainfo")
 
-    print(f"\nSteam User : {persona_name}")
-    print(f"Steam ID   : {steam_id}")
+    # print(f"\nSteam User : {persona_name}")
+    # print(f"Steam ID   : {steam_id}")
 
     if game_id and game_name:
         store_url = f"https://store.steampowered.com/app/{game_id}"

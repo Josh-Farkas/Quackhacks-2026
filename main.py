@@ -244,12 +244,12 @@ def get_daily_playtime(game_times, game_names):
     """Returns a dictionary of {date: {game: minutes}}"""
     daily_playtime = {}
     for t, game in zip(game_times, game_names):
-        day = time_to_date(t)
+        day = time_to_date(t).date()
         if day not in daily_playtime:
             daily_playtime[day] = {}
         if game not in daily_playtime[day]:
             daily_playtime[day][game] = 0
-        daily_playtime[day][game] += 3
+        daily_playtime[day][game] += steamAPI.UPDATE_PERIOD
     return daily_playtime
 
 
@@ -263,12 +263,13 @@ def get_sleep_correlation(game_times, game_names, sleep_scores):
         sleep_score = sleep_scores.get(day)
         if sleep_score is None:
             continue
-        for game, minutes in games.items():
+        for game, playtime in games.items():
+            print(game, playtime)
             if game not in game_weighted_sleep:
                 game_weighted_sleep[game] = 0
                 game_total_playtime[game] = 0
-            game_weighted_sleep[game] += sleep_score * minutes
-            game_total_playtime[game] += minutes
+            game_weighted_sleep[game] += sleep_score * playtime
+            game_total_playtime[game] += playtime
 
     return {
         game: game_weighted_sleep[game] / game_total_playtime[game]
@@ -302,6 +303,7 @@ def main():
     body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
     sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
     print(sleep_correlation)
+    print(get_daily_playtime(game_times, game_names))
 
     report.generate_report(stress_over_time, avg_stress_per_game)
 
