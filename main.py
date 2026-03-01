@@ -22,7 +22,7 @@ def date_to_time(date):
 
 def time_to_date(time):
     """Changes UNIX timestamp to datetime date"""
-    return datetime.fromtimestamp(time).date()
+    return datetime.fromtimestamp(time)
 
 def read_game_data():
     """Returns array of times games were opened, the game's name, and its graph color"""
@@ -85,7 +85,6 @@ def get_sleep_scores(start_date, end_date):
     sleep_data = get_sleep_data(start_date, end_date)
     sleep_scores = {d: sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data}
     return sleep_scores
-
 
 
 def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
@@ -202,6 +201,24 @@ def get_daily_playtime(game_times, game_names):
 def get_sleep_correlation(game_times, game_names, sleep_scores):
     """Calculates how a game effects your sleep"""
     daily_playtime = get_daily_playtime(game_times, game_names)
+    game_weighted_sleep = {}
+    game_total_playtime = {}
+
+    for day, games in daily_playtime.items():
+        sleep_score = sleep_scores.get(day)
+        if sleep_score is None:
+            continue
+        for game, minutes in games.items():
+            if game not in game_weighted_sleep:
+                game_weighted_sleep[game] = 0
+                game_total_playtime[game] = 0
+            game_weighted_sleep[game] += sleep_score * minutes
+            game_total_playtime[game] += minutes
+
+    return {
+        game: game_weighted_sleep[game] / game_total_playtime[game]
+        for game in game_total_playtime
+    }
 
 def main():
     # stats = garminAPI.get_stats()
@@ -228,9 +245,10 @@ def main():
     stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
     body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
+    sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
+    print(sleep_correlation)
 
     report.generate_report(stress_over_time, avg_stress_per_game)
-    print("Done")
 
 if __name__ == "__main__":
     main()
