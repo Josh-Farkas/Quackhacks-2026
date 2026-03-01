@@ -301,7 +301,7 @@ def get_sleep_correlation(game_times, game_names, sleep_scores):
     }
 
 def main():
-    
+
     # print(get_sleep_data(date.today() - timedelta(days=1), date.today() - timedelta(days=1)))
     # stats = garminAPI.get_stats()
 
@@ -319,7 +319,7 @@ def main():
     steamAPI.start_steam_polling()
     # sleep_data = garminAPI.get_sleep_data()
     sleep_scores = get_sleep_scores(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
-    
+
     stress_times, stress_values = get_stress_values(date(2026, 2, 11) - timedelta(days=7), date(2026, 2, 11))
     game_times, game_names, color_map = read_game_data()
     body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
@@ -328,11 +328,12 @@ def main():
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
     body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
     sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
-    
+
     # print(sleep_correlation)
     # print(get_daily_playtime(game_times, game_names))
 
-    report.generate_report(stress_over_time, avg_stress_per_game)
+    report.generate_report(
+        stress_over_time, avg_stress_per_game, body_battery_over_time)
 
 if __name__ == "__main__":
     main()
