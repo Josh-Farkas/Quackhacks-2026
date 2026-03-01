@@ -17,48 +17,47 @@ def fig_to_image(fig, width=6*inch):
     return Image(buf, width=width, height=width * aspect)
 
 
-def generate_report(stress_over_time, avg_stress_per_game, output_path="stress_report.pdf"):
+def generate_report(stress_over_time, avg_stress_per_game, output_path="report.pdf"):
     styles = getSampleStyleSheet()
     doc = SimpleDocTemplate(output_path, pagesize=letter)
-    story = []
+    content = []
 
-    # Title
-    story.append(Paragraph("Gaming Stress Report", styles["Title"]))
-    story.append(Spacer(1, 0.2 * inch))
-    story.append(Paragraph(
-        "This report summarises your stress levels recorded during gaming sessions, "
-        "broken down by game and over time.",
-        styles["Normal"]
-    ))
-    story.append(Spacer(1, 0.3 * inch))
+    def add_fig_report(fig, title, paragraph):
+        content.append(Paragraph(title, styles["Heading1"]))
+        content.append(Paragraph(paragraph, styles["Normal"]))
+        content.append(Spacer(1, 0.15 * inch))
+        content.append(fig_to_image(fig))
+        plt.close(fig)
 
-    # Stress over time
-    story.append(Paragraph("Stress Over Time", styles["Heading1"]))
-    story.append(Paragraph(
-        "The chart below shows your stress level throughout the session. "
-        "Each colour represents a different game being played at that moment.",
-        styles["Normal"]
-    ))
-    story.append(Spacer(1, 0.15 * inch))
+    # Adds Title
+    content.append(
+        Paragraph(
+            "Recent Impacts of Gaming on Your Sleep and Mental Health", styles["Title"]
+        )
+    )
+    content.append(Spacer(1, 0.2 * inch))
+    content.append(
+        Paragraph(
+            "This report visualizes correlations between your gaming sessions and their respective impacts on your body, like on your stress over time broken down by game, average stress by game, and on your sleep scores.",
+            styles["Normal"],
+        )
+    )
+    content.append(Spacer(1, 0.3 * inch))
 
-    fig1 = stress_over_time   # your existing plot function,
-    story.append(fig_to_image(fig1))            # modified to return fig instead of plt.show()
-    plt.close(fig1)
+    # Adds Stress Over Time Report
+    add_fig_report(
+        stress_over_time,
+        "Stress Over Time",
+        "The chart below shows your stress level throughout the session. Each color represents a different game being played at that moment.",
+    )
+    content.append(PageBreak())
 
-    story.append(PageBreak())
+    # Adds Average Stress Per Game Report
+    add_fig_report(
+        avg_stress_per_game,
+        "Average Stress by Game",
+        "The bar chart below shows the mean stress level recorded during each game. Higher values indicate more stressful sessions.",
+    )
 
-    # Average stress per game
-    story.append(Paragraph("Average Stress by Game", styles["Heading1"]))
-    story.append(Paragraph(
-        "The bar chart below shows the mean stress level recorded during each game. "
-        "Higher values indicate more stressful sessions.",
-        styles["Normal"]
-    ))
-    story.append(Spacer(1, 0.15 * inch))
-
-    fig2 = avg_stress_per_game
-    story.append(fig_to_image(fig2))
-    plt.close(fig2)
-
-    doc.build(story)
+    doc.build(content)
     print(f"Report saved to {output_path}")
