@@ -1,6 +1,14 @@
 # Quackhacks 2026
 Stevens Hackathon project
 
+## User Guide
+Our program requires your account information from Steam and Garmin; here's what you'll need to do before you start.
+First, get your own Steam API Key: https://steamcommunity.com/dev
+Next, get your Steam account ID. This can be found on the desktop application by navigating to your Account Details, or by inputting your account URL into this website: https://steamid.io/
+This is all you need from Steam. For Garmin, you will need to input your email and password. Once you have these items, you can continue to starting the program.
+In the console, you will be prompted to either (1) Set your Steam ID, Steam API key, and Garmin login, (2) Generate report, (3) Run Steam monitoring, or (q) quit.
+First, type 1, and enter your information. Next, type 3 to start running your steam monitoring. To get a report on one day's worth of data, make sure you have the steam monitoring running for at least 24 hours. You can quit and then return to the program after that time has elapsed and simply type 2 to generate your report.
+
 ## Inspiration
 All three of us are avid gamers that also care about our mental health. Sometimes gaming can cause more harm to your mental health than one might realize. We wanted to build something to help gamers see how their sessions directly impact their mental and physical health. One might enjoy playing horror games but after looking into stress levels and sleep score realize it's not good to play them right before bed as it increases stress and causes poor sleep.
 
