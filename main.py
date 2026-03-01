@@ -203,9 +203,10 @@ def get_body_battery_values(start_date, end_date):
     body_battery_times = body_battery_data[:, 0] / 1000
     body_battery_values = body_battery_data[:, 1]
     body_battery_values = np.ma.masked_where(
-        body_battery_values < 0, body_battery_values
+        body_battery_values == None, body_battery_values
     )
     return body_battery_times, body_battery_values
+
 
 def plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map):
     """Plots body battery values with colors based on current game."""
@@ -317,11 +318,11 @@ def main():
 
     steamAPI.start_steam_polling()
     # sleep_data = garminAPI.get_sleep_data()
-    sleep_scores = get_sleep_scores(date.today() - timedelta(days=7), date.today())
+    sleep_scores = get_sleep_scores(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
     
     stress_times, stress_values = get_stress_values(date(2026, 2, 11) - timedelta(days=7), date(2026, 2, 11))
     game_times, game_names, color_map = read_game_data()
-    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(days=7), date.today())
+    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
 
     stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
@@ -331,7 +332,6 @@ def main():
     # print(sleep_correlation)
     # print(get_daily_playtime(game_times, game_names))
 
-    print("RUNNING")
     report.generate_report(stress_over_time, avg_stress_per_game)
 
 if __name__ == "__main__":
