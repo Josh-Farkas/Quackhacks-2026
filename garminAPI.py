@@ -23,6 +23,12 @@ def get_stats(day=_today):
     """Return client stats for a given day."""
     return client.get_stats(day)
 
+
+def get_sleep_data(day=_today):
+    """Return client sleep data for a given day"""
+    return client.get_sleep_data(day)
+
+
 def get_stress_values(day=_today):
     stress_data = client.get_stress_data(day)
     stress_values = np.array(stress_data.get('stressValuesArray'))

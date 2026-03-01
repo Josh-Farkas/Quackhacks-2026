@@ -1,11 +1,17 @@
-import steamapi
+import steamAPI
 import garminAPI
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import json # dump dict into txt file
+
+_today = date.today().strftime('%Y-%m-%d')
+
+def get_ymd_date(date: date):
+    """Returns the date in YYYY/MM/DD format days_ago days from today."""
+    return date.strftime('%Y-%m-%d')
 
 
 def date_to_time(date):
@@ -17,10 +23,9 @@ def time_to_date(time):
     """Changes UNIX timestamp to datetime date"""
     return datetime.fromtimestamp(time)
 
-
 def read_game_data():
     """Returns array of times games were opened, the game's name, and its graph color"""
-    game_data = np.genfromtxt(steamapi.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
+    game_data = np.genfromtxt(steamAPI.GAME_DATA_PATH, delimiter=",", dtype=None, names=True, encoding="utf-8", skip_header=0)
     game_data = np.array(game_data.tolist())
     game_times = game_data[:, 0].astype(float)
     game_names = game_data[:, 1]
@@ -36,13 +41,17 @@ def get_game_at(game_times, game_names, t):
     """Return the game being played at time t."""
     prior = game_times[game_times <= t]
     if len(prior) == 0:
-        return "Unknown"
+        return "None"
     return game_names[np.argmax(prior)]
 
 
-def get_stress_values():
+def get_stress_values(start_date, end_date):
     """Returns array of timestamps and corresponding stress values"""
-    stress_data = garminAPI.get_stress_values()
+    
+    stress_data = np.vstack([
+        garminAPI.get_stress_values(get_ymd_date(start_date + timedelta(days=d)))
+        for d in range((end_date - start_date).days + 1)
+    ])
     stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
     stress_values = np.ma.masked_where(stress_values <= 0, stress_values)
@@ -50,7 +59,35 @@ def get_stress_values():
     return stress_times, stress_values
 
 
-def plot_game_stress():
+def get_game_average_stress(stress_times, stress_values, game_times, game_names):
+    """Returns the average stress level while playing each game"""
+    # Map each stress timestamp to a game name
+    labels = np.array([get_game_at(game_times, game_names, t) for t in stress_times])
+
+    return {
+        game: np.ma.mean(stress_values[labels == game])
+        for game in np.unique(labels)
+    }
+
+
+def get_sleep_data(start_date, end_date):
+    """Returns the sleep data starting at start date until end date"""
+    sleep_data = {
+        start_date + timedelta(days=d): garminAPI.get_sleep_data(get_ymd_date(start_date + timedelta(days=d)))
+        for d in range((end_date - start_date).days + 1)
+    }
+    return sleep_data
+
+
+def get_sleep_scores(start_date, end_date):
+    """Returns a list of sleep scores from start_date to end_date"""
+    sleep_data = get_sleep_data(start_date, end_date)
+    sleep_scores = [sleep_data[d]['dailySleepDTO']['sleepScores']['overall']['value'] for d in sleep_data]
+    return sleep_scores
+
+
+
+def plot_game_stress(stress_times, stress_values, game_times, game_names, color_map):
     """Plots stress with colors based on current game."""
     # Get latest data
     stress_times, stress_values = get_stress_values()
@@ -127,6 +164,27 @@ def plot_body_battery():
     plt.show()
 
 
+def plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map):
+    """Plots the average stress of each game in a bar chart"""
+    avg_stress = get_game_average_stress(stress_times, stress_values, game_times, game_names)
+
+    games  = list(avg_stress.keys())
+    values = list(avg_stress.values())
+    colors = [color_map.get(game, "gray") for game in games]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(games, values, color=colors)
+    ax.bar_label(bars, fmt="%.1f", padding=3)
+
+    ax.set_xlabel("Game")
+    ax.set_ylabel("Average Stress")
+    ax.set_title("Average Stress by Game")
+    ax.set_ylim(0, max(values) * 1.15)  # headroom for labels
+    plt.xticks(rotation=15, ha="right")
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     # plot_game_stress()
 
@@ -145,6 +203,14 @@ def main():
     # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_values(), fmt="%i", delimiter=",")
 
     # print(stats)
+    # steamAPI.start_steam_polling()
+    # sleep_data = garminAPI.get_sleep_data()
+    print(get_sleep_scores(date.today() - timedelta(days=7), date.today()))
+    
+    stress_times, stress_values = get_stress_values(date.today() - timedelta(days=7), date.today())
+    game_times, game_names, color_map = read_game_data()
+    # plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
+    # plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
 
 
 if __name__ == "__main__":
