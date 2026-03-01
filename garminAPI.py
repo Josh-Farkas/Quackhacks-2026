@@ -30,12 +30,12 @@ _today = date.today().strftime('%Y-%m-%d')
 _yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
-def get_stats(day=_today):
+def get_stats(day=_yesterday):
     """Return client stats for a given day."""
     return client.get_stats(day)
 
 
-def get_sleep_data(day=_today):
+def get_sleep_data(day=_yesterday):
     """Return client sleep data for a given day"""
     return client.get_sleep_data(day)
 
@@ -45,7 +45,7 @@ def get_stress_values(day):
     stress_values = np.array(stress_data.get('stressValuesArray'))
     return stress_values
 
-def get_body_battery_data(start_day=_today, end_day=_today):
+def get_body_battery_data(start_day=_yesterday, end_day=_yesterday):
     body_battery_list = client.get_body_battery(start_day, end_day)
     body_battery_data = np.vstack(list(map(lambda b: b.get('bodyBatteryValuesArray'), body_battery_list)))
     return body_battery_data

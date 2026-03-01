@@ -32,7 +32,7 @@ def generate_report(stress_over_time, avg_stress_per_game, body_battery_over_tim
     # Adds Title
     content.append(Paragraph("Recent Impacts of Gaming on Your Sleep and Mental Health", styles["Title"]))
     content.append(Spacer(1, 0.2 * inch))
-    content.append(Paragraph("This report visualizes correlations between your gaming sessions and their respective impacts on your body, like on your stress over time broken down by game, average stress by game, and on your sleep scores.", styles["Normal"]))
+    content.append(Paragraph("This report visualizes correlations between your gaming sessions and their respective impacts on your body, like on your stress over time broken down by game, average stress by game, and body battery.", styles["Normal"]))
     content.append(Spacer(1, 0.3 * inch))
 
     # Adds Stress Over Time Report
