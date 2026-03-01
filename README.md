@@ -2,7 +2,7 @@
 Stevens Hackathon project
 
 ## Inspiration
-All three team of us are avid gamers that also care about our mental health. Sometimes gaming can cause more harm to your mental health than one might realize. We wanted to build something to help gamers see how their sessions directly impact their mental and physical health. One might enjoy playing horror games but after looking into stress levels and sleep score realize it's not good to play them right before bed as it increases stress and causes poor sleep.
+All three of us are avid gamers that also care about our mental health. Sometimes gaming can cause more harm to your mental health than one might realize. We wanted to build something to help gamers see how their sessions directly impact their mental and physical health. One might enjoy playing horror games but after looking into stress levels and sleep score realize it's not good to play them right before bed as it increases stress and causes poor sleep.
 
 ## What it does
 Our project connects gameplay data with biometric health signals to generate personalized reports.
@@ -10,14 +10,7 @@ Our project connects gameplay data with biometric health signals to generate per
 Each day, users can:
 - View stress levels over time
 - See body battery trends
-- Review sleep duration and score
 - Visualize gaming sessions directly overlaid on stress graphs
-
-The weekly summary allows users to:
-- Compare average stress across different games
-- Identify which games correlate with elevated stress
-- See patterns in body battery drain during sessions
-- Evaluate how gaming habits impact overall recovery
 
 Rather than discouraging gaming our tool provides actionable insight so users can make informed decisions about when and what to play.
 
@@ -31,7 +24,7 @@ One of the biggest challenges was using the steam API. Finding the right python 
 We are super proud of getting the steam API working well enough to make this project feasible. We are also proud of getting two unrelated APIs working together to create something meaningful. We are most proud of building something that is easily scalable and genuinely useful.
 
 ## What we learned
-We learned the steam and garmin api, report python library, matplotlib, collaboration skills. API limitations often require creative engineering solutions. Visualization design matters as much as analysis when communicating insights.
+We learned that API limitations often require creative engineering solutions. Since we found out the steam API doesn't save any previous gaming data we have to come up with a way to capture the data we needed to make this project happen. We also learned that visualization design matters as much as analysis when communicating insights. We spent a lot of time figuring out the best way to graph and show data trends that would be the most useful for gamers. We also learned new technologies like the garminConnectAPI, the steam API, python report library, and python matplotlib library.
 
 ## What's next for Recent Impacts of Gaming on Your Sleep and Mental Health
 Future improvements include expanding use to other biometric health devices like apple watch or fitbit allowing it to be more accessible to different gamers. Another future implementation is real time stress spike alerts during an active gaming session so gamers can make active decisions to help their metnal health rather than see the data the next day. We would also integrate a web dashboard interface for insights making it super user friendly. Another thing would be adding machine learning based predictions of burnout or suggestions for a "healthy" gaming session creating almost a mental health companion catered towards gamers. This project truly has so much potential to grow and become accessible to all gamers and empower smarter gaming.
