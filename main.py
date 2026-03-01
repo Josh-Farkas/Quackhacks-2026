@@ -97,10 +97,65 @@ def plot_game_stress(stress_times, stress_values, game_times, game_names, color_
 
     fig, ax = plt.subplots(figsize=(12, 4))
 
+    # for i in range(len(stress_times) - 1):
+    #     game  = get_game_at(game_times, game_names, stress_times[i])
+    #     color = color_map.get(game, "gray")
+    #     ax.plot(stress_dates[i:i+2], stress_values[i:i+2], color=color, linewidth=2)
+
     for i in range(len(stress_times) - 1):
-        game  = get_game_at(game_times, game_names, stress_times[i])
-        color = color_map.get(game, "gray")
-        ax.plot(stress_dates[i:i+2], stress_values[i:i+2], color=color, linewidth=2)
+        game = get_game_at(game_times, game_names, stress_times[i])
+
+        # Make None grey
+        if game == "None":
+            color = "gray"
+        else:
+            color = color_map.get(game, "gray")
+
+        ax.plot(stress_dates[i:i+2], stress_values[i:i+2],
+                color=color, linewidth=2)
+
+    # --- Build sessions ---
+    sessions = []
+    current_game = None
+    session_start = None
+
+    for i in range(len(stress_times)):
+        game = get_game_at(game_times, game_names, stress_times[i])
+
+        if game != current_game:
+            if current_game is not None:
+                sessions.append({
+                    "game": current_game,
+                    "start": stress_times[i-1],
+                    "end": stress_times[i]
+                })
+            current_game = game
+            session_start = stress_times[i]
+
+    # Close last session
+    if current_game is not None:
+        sessions.append({
+            "game": current_game,
+            "start": session_start,
+            "end": stress_times[-1]
+        })
+
+    # Convert to datetime
+    for session in sessions:
+        session["start_dt"] = time_to_date(session["start"])
+        session["end_dt"] = time_to_date(session["end"])
+
+    # --- Shade ONLY real games ---
+    for session in sessions:
+        if session["game"] == "None":
+            continue
+
+        ax.axvspan(
+            session["start_dt"],
+            session["end_dt"],
+            color=color_map.get(session["game"], "gray"),
+            alpha=0.15
+        )
 
     # Legend
     for game, color in color_map.items():
