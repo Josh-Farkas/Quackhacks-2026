@@ -5,6 +5,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
+from reportlab.lib import colors
+
 
 def fig_to_image(fig, width=6*inch):
     """Convert a matplotlib figure to a reportlab Image object."""
@@ -17,7 +19,36 @@ def fig_to_image(fig, width=6*inch):
     return Image(buf, width=width, height=width * aspect)
 
 
-def generate_report(stress_over_time, avg_stress_per_game, body_battery_over_time, output_path="report.pdf",):
+def make_cards(cards):
+    """
+    Build a row of info cards from a list of (label, value) tuples.
+    e.g. [("Highest Stress Game", "CS2"), ("Peak Stress", "87 @ 14:32")]
+    """
+    headers = [Paragraph(f"<b>{label}</b>", getSampleStyleSheet()["Normal"]) for label, _ in cards]
+    values  = [Paragraph(str(value),         getSampleStyleSheet()["Normal"]) for _, value  in cards]
+
+    table = Table(
+        [headers, values],
+        colWidths=[6.5 * inch / len(cards)] * len(cards),
+    )
+    table.setStyle(TableStyle([
+        ("BACKGROUND",   (0, 0), (-1, 0),  colors.HexColor("#2c2c2c")),
+        ("BACKGROUND",   (0, 1), (-1, 1),  colors.HexColor("#f5f5f5")),
+        ("TEXTCOLOR",    (0, 0), (-1, 0),  colors.white),
+        ("TEXTCOLOR",    (0, 1), (-1, 1),  colors.HexColor("#222222")),
+        ("ALIGN",        (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
+        ("FONTSIZE",     (0, 0), (-1, 0),  8),
+        ("FONTSIZE",     (0, 1), (-1, 1),  10),
+        ("TOPPADDING",   (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING",(0, 0), (-1, -1), 6),
+        ("GRID",         (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ROUNDEDCORNERS", [4]),
+    ]))
+    return table
+
+
+def generate_report(stress_over_time, avg_stress_per_game, body_battery_over_time, peak_stress_value, peak_stress_time, output_path="report.pdf",):
     styles = getSampleStyleSheet()
     doc = SimpleDocTemplate(output_path, pagesize=letter)
     content = []
@@ -37,7 +68,9 @@ def generate_report(stress_over_time, avg_stress_per_game, body_battery_over_tim
 
     # Adds Stress Over Time Report
     add_fig_report(stress_over_time, "Stress Over Time", "The chart below shows your stress level throughout the time period. Each color indicates when different games were played.")
+    content.append(Paragraph(f"Peak Stress: {peak_stress_value:.0f} at {peak_stress_time}"))
     content.append(PageBreak())
+    
 
     # Adds Average Stress Per Game Report
     add_fig_report(avg_stress_per_game, "Average Stress by Game", "The bar chart below shows the mean stress level recorded during each game. Higher values indicate more stressful sessions.")

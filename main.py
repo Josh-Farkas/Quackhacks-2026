@@ -470,9 +470,11 @@ def generate_report():
     
     # print(sleep_correlation)
     # print(get_daily_playtime(game_times, game_names))
-
+    peak_stress_i = np.argmax(stress_values)
+    peak_stress_value = stress_values[peak_stress_i]
+    peak_stress_time = time_to_date(stress_times[peak_stress_i])
     report.generate_report(
-        stress_over_time, avg_stress_per_game, body_battery_over_time)
+        stress_over_time, avg_stress_per_game, body_battery_over_time, peak_stress_value, peak_stress_time)
 
 
 def main():
