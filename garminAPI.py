@@ -2,6 +2,7 @@ from garminconnect import Garmin
 import os
 import numpy as np
 from datetime import date
+from datetime import timedelta
 from dotenv import load_dotenv
 
 dirname = os.path.dirname(__file__)
@@ -15,6 +16,7 @@ client = Garmin(
 client.login()
 
 _today = date.today().strftime('%Y-%m-%d')
+_yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def get_stats(day=_today):
@@ -25,6 +27,15 @@ def get_stress_values(day=_today):
     stress_data = client.get_stress_data(day)
     stress_values = np.array(stress_data.get('stressValuesArray'))
     return stress_values
+
+def get_body_battery_values(start_day=_today, end_day=_today):
+    body_battery_list = client.get_body_battery(start_day, end_day)
+    body_battery_values = np.array(body_battery_list[0].get("bodyBatteryValuesArray"), dtype=np.int64)
+    for i in body_battery_list[1:]:
+        body_battery_values = np.concatenate(
+            (body_battery_values, i.get("bodyBatteryValuesArray")), dtype=np.int64
+        )
+    return body_battery_values
 
 
 # Get heart rate data
