@@ -6,13 +6,13 @@ import matplotlib.dates as mdates
 from matplotlib.lines import Line2D
 import numpy as np
 from datetime import datetime, date, timedelta
-import json # dump dict into txt file
 import report
+import os
 
 _today = date.today().strftime('%Y-%m-%d')
 
 def get_ymd_date(date: date):
-    """Returns the date in YYYY/MM/DD format days_ago days from today."""
+    """Returns the date in YYYY/MM/DD format."""
     return date.strftime('%Y-%m-%d')
 
 
@@ -49,15 +49,13 @@ def get_game_at(game_times, game_names, t):
 
 def get_stress_values(start_date, end_date):
     """Returns array of timestamps and corresponding stress values"""
-    
     stress_data = np.vstack([
-        garminAPI.get_stress_values(get_ymd_date(start_date + timedelta(days=d)))
+        garminAPI.get_stress_values(get_ymd_date(start_date + timedelta(d)))
         for d in range((end_date - start_date).days + 1)
     ])
     stress_times = stress_data[:, 0] / 1000 # Convert to seconds not ms
     stress_values = stress_data[:, 1]
     stress_values = np.ma.masked_where(stress_values <= 0, stress_values)
-    # print(stress_times.min(), stress_times.max()) # 1772254800.0 1772303760.0
     return stress_times, stress_values
 
 
@@ -277,6 +275,32 @@ def get_daily_playtime(game_times, game_names):
     return daily_playtime
 
 
+# def plot_daily_playtime(game_times, game_names):
+#     """Plots a stacked bar chart of daily playtime per game."""
+#     daily_playtime = get_daily_playtime(game_times, game_names)
+
+#     dates = sorted(daily_playtime.keys())
+#     unique_games = list({game for day in daily_playtime.values() for game in day})
+#     palette = list(mcolors.TABLEAU_COLORS.values())
+#     color_map = {game: palette[i % len(palette)] for i, game in enumerate(unique_games)}
+
+#     fig, ax = plt.subplots(figsize=(12, 5))
+
+#     bottoms = np.zeros(len(dates))
+#     for game in unique_games:
+#         values = [daily_playtime[day].get(game, 0) for day in dates]
+#         ax.bar(dates, values, bottom=bottoms, label=game, color=color_map[game])
+#         bottoms += np.array(values)
+
+#     ax.set_xlabel("Date")
+#     ax.set_ylabel("Playtime (minutes)")
+#     ax.set_title("Daily Playtime by Game")
+#     ax.legend()
+#     plt.xticks(rotation=45, ha="right")
+#     plt.tight_layout()
+#     # plt.show()
+#     return fig
+
 def get_sleep_correlation(game_times, game_names, sleep_scores):
     """Calculates how a game effects your sleep"""
     daily_playtime = get_daily_playtime(game_times, game_names)
@@ -300,39 +324,94 @@ def get_sleep_correlation(game_times, game_names, sleep_scores):
         for game in game_total_playtime
     }
 
-def main():
+
+def setup():
+    import os
+
+ENV_FILE = ".env"
+
+def save_to_env(key, value):
+    """Write or update a key in the .env file."""
+    lines = []
+    found = False
+
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, "r") as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith(f"{key}="):
+                lines[i] = f"{key}={value}\n"
+                found = True
+                break
+
+    if not found:
+        lines.append(f"{key}={value}\n")
+
+    with open(ENV_FILE, "w") as f:
+        f.writelines(lines)
+
+
+def setup():
+    print("=== Setup ===\n")
+
+    steam_api_key = input("Steam API key: ").strip()
+    save_to_env("STEAM_API_KEY", steam_api_key)
     
-    # print(get_sleep_data(date.today() - timedelta(days=1), date.today() - timedelta(days=1)))
-    # stats = garminAPI.get_stats()
+    steam_id = input("Steam user ID: ").strip()
+    save_to_env("STEAM_ID", steam_id)
 
-    # # View Stats Dict in a .txt File
-    # with open('stats.txt', 'w') as file:
-    #     json.dump(stats, file, indent=4)
+    print()
+    garmin_user = input("Garmin email: ").strip()
+    save_to_env("GARMIN_EMAIL", garmin_user)
 
-    # # View Body Battery Values Dict in a .txt File
-    # with open('bodyBattery.txt', 'w') as file:
-    #     json.dump(get_body_battery_values(), file, indent=4)
+    garmin_pass = input("Garmin password: ").strip()
+    save_to_env("GARMIN_PASSWORD", garmin_pass)
 
-    # # View Body Battery Values np array in a .txt File
-    # np.savetxt("bodyBatteryValues.txt", garminAPI.get_body_battery_data(), fmt="%i", delimiter=",")
+    print("\nSaved user info.")
+    steamAPI.update_env()
 
-    steamAPI.start_steam_polling()
-    # sleep_data = garminAPI.get_sleep_data()
+
+def generate_report():
+    sleep_data = garminAPI.get_sleep_data()
     sleep_scores = get_sleep_scores(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
     
-    stress_times, stress_values = get_stress_values(date(2026, 2, 11) - timedelta(days=7), date(2026, 2, 11))
+    stress_times, stress_values = get_stress_values(date.today() - timedelta(2), date.today() - timedelta(2))
     game_times, game_names, color_map = read_game_data()
-    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(days=8), date.today() - timedelta(days=1))
+    body_battery_times, body_battery_values = get_body_battery_values(date.today() - timedelta(2), date.today() - timedelta(2))
 
     stress_over_time = plot_game_stress(stress_times, stress_values, game_times, game_names, color_map)
     avg_stress_per_game = plot_game_average_stress(stress_times, stress_values, game_times, game_names, color_map)
     body_battery_over_time = plot_body_battery(body_battery_times, body_battery_values, game_times, game_names, color_map)
-    sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
+    # daily_playtime = plot_daily_playtime(game_times, game_names)
+    # sleep_correlation = get_sleep_correlation(game_times, game_names, sleep_scores)
     
     # print(sleep_correlation)
     # print(get_daily_playtime(game_times, game_names))
 
     report.generate_report(stress_over_time, avg_stress_per_game)
+
+
+
+def main():
+    while True:
+        ui = input("Type 1, 2, 3, q to exit:\n(1) Set Steam ID, API Key and Garmin Login\n(2) Generate Report \n(3) Run Steam Monitoring\n> ")
+        while ui not in ['1', '2', '3', 'q', 'Q']:
+            print("Invalid input.")
+            ui = input("Type 1, 2, 3, q to exit:\n(1) Set Steam ID, API Key and Garmin Login\n(2) Generate Report \n(3) Run Steam Monitoring\n> ")
+        
+        if ui == "1":
+            setup()
+        elif ui == "2":
+            generate_report()
+        elif ui == "3":
+            steamAPI.start_steam_polling()
+            while input("Type q to quit.") != "q": pass
+            exit()
+        elif ui == "q" or ui == "Q":
+            exit()
+        else:
+            continue
+
 
 if __name__ == "__main__":
     main()

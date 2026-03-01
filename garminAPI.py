@@ -15,6 +15,17 @@ client = Garmin(
 )
 client.login()
 
+def update_env():
+    global client
+    load_dotenv(dotenv_path=os.path.join(dirname, '.env'))
+
+    # Initialize and login
+    client = Garmin(
+        os.getenv("GARMIN_EMAIL"),
+        os.getenv("GARMIN_PASSWORD")
+    )
+    client.login()
+
 _today = date.today().strftime('%Y-%m-%d')
 _yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -29,7 +40,7 @@ def get_sleep_data(day=_today):
     return client.get_sleep_data(day)
 
 
-def get_stress_values(day=_today):
+def get_stress_values(day):
     stress_data = client.get_stress_data(day)
     stress_values = np.array(stress_data.get('stressValuesArray'))
     return stress_values

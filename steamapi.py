@@ -9,8 +9,7 @@ STEAM_API_BASE = "https://api.steampowered.com"
 UPDATE_PERIOD = 60 * 3 # Seconds
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-STEAM_ID   = "76561198357985560"          # 64-bit SteamID,  e.g. "76561197960287930"
-VANITY_URL = "YOUR_URL_HERE"     # Username/vanity URL, e.g. "gaben" (used if STEAM_ID is blank)
+VANITY_URL = "YOUR_URL_HERE" # Username/vanity URL, e.g. "gaben" (used if STEAM_ID is blank)
 GAME_DATA_FILE_NAME = "user_game_data.csv"
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -19,6 +18,13 @@ GAME_DATA_PATH = os.path.join(dirname, GAME_DATA_FILE_NAME)
 
 load_dotenv(dotenv_path=os.path.join(dirname, '.env'))
 STEAM_API_KEY = os.getenv("STEAM_API_KEY")
+STEAM_ID = os.getenv("STEAM_ID")
+
+def update_env():
+    global STEAM_API_KEY, STEAM_ID
+    load_dotenv(dotenv_path=os.path.join(dirname, '.env'))
+    STEAM_API_KEY = os.getenv("STEAM_API_KEY")
+    STEAM_ID = os.getenv("STEAM_ID")
 
 def resolve_vanity_url(api_key: str, vanity_url: str) -> str:
     """Resolve a Steam vanity URL (username) to a 64-bit SteamID."""
@@ -57,17 +63,6 @@ def get_active_game(api_key: str, steam_id: str) -> None:
 
     # print(f"\nSteam User : {persona_name}")
     # print(f"Steam ID   : {steam_id}")
-
-    if game_id and game_name:
-        store_url = f"https://store.steampowered.com/app/{game_id}"
-        print(f"Active Game: {game_name}")
-        print(f"App ID     : {game_id}")
-        print(f"Store Page : {store_url}")
-    elif game_id:
-        # Non-Steam game or game info unavailable
-        print(f"Active Game: [Non-Steam game or info unavailable] (App ID: {game_id})")
-    else:
-        print("Active Game: Not currently playing any game.")
     return {"name": game_name, "id": game_id}
 
 
@@ -99,13 +94,12 @@ def start_steam_polling():
 
 
 def main():
-#     steam_id = STEAM_ID
-#     if not steam_id:
-#         print(f"Resolving vanity URL '{VANITY_URL}'...")
-#         steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
-#     start_steam_polling()
+    steam_id = STEAM_ID
+    if not steam_id:
+        print(f"Resolving vanity URL '{VANITY_URL}'...")
+        steam_id = resolve_vanity_url(STEAM_API_KEY, VANITY_URL)
+    start_steam_polling()
 
-    return
 
 
 if __name__ == "__main__":
